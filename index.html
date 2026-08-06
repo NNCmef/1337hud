@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1337 Control HUD Pro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="hud-container">
+        
+        <!-- Шапка: Единая ровная линия -->
+        <header class="top-nav">
+            <div class="nav-brand">
+                <span class="logo-spark">💠</span>
+                <span class="logo-title">1337<span class="logo-accent">HUD</span></span>
+                <div id="globalStatus" class="status-pill status-offline">
+                    <span class="pulse-dot"></span>
+                    <span id="statusText">OFFLINE</span>
+                </div>
+            </div>
+
+            <nav class="segmented-tabs">
+                <button class="menu-item active" data-tab="monitoring">📊 Дашборд</button>
+                <button class="menu-item" data-tab="services">⚙️ Ресурсы & Процессы</button>
+                <button class="menu-item" data-tab="terminal">💻 Терминал</button>
+                <button class="menu-item" data-tab="alerts">🔔 Алерты</button>
+            </nav>
+
+            <div class="nav-controls">
+                <div class="control-pill">
+                    <span class="pill-label">Хост:</span>
+                    <select id="hostSelect"><option value="">Загрузка...</option></select>
+                </div>
+                <div class="control-pill">
+                    <span class="pill-label">Частота:</span>
+                    <select id="refreshRate">
+                        <option value="1000">1 сек</option>
+                        <option value="3000" selected>3 сек</option>
+                        <option value="5000">5 сек</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Системный инфо-бар: Ровная сетка из 5 элементов -->
+        <div class="sys-banner-bar">
+            <div class="sys-badge"><span>🖥️ ОС:</span> <strong id="infoOS">-</strong></div>
+            <div class="sys-badge"><span>🧠 Ядра:</span> <strong id="infoCores">-</strong></div>
+            <div class="sys-badge"><span>🌐 IP:</span> <strong id="infoIP">-</strong></div>
+            <div class="sys-badge"><span>⏱️ Uptime:</span> <strong id="infoUptime">-</strong></div>
+            <div class="sys-badge"><span>📡 Хостов:</span> <strong id="totalHosts">0</strong></div>
+        </div>
+
+        <!-- Главное рабочее пространство -->
+        <main class="workspace">
+
+            <!-- ВКЛАДКА 1: ДАШБОРД -->
+            <div id="tab-monitoring" class="tab-content active">
+                <div class="bento-grid">
+                    
+                    <!-- KPI CPU -->
+                    <div class="bento-card col-3">
+                        <div class="card-head">
+                            <span class="card-title">Процессор</span>
+                            <span class="card-icon">🧠</span>
+                        </div>
+                        <div class="big-stat-val" id="cpuVal">0%</div>
+                        <div class="progress-bar"><div id="cpuBar" class="progress-fill cpu-fill" style="width: 0%"></div></div>
+                        <div class="sub-stat-text">Загрузка ядер</div>
+                    </div>
+
+                    <!-- KPI RAM -->
+                    <div class="bento-card col-3">
+                        <div class="card-head">
+                            <span class="card-title">ОЗУ (RAM)</span>
+                            <span class="card-icon">⚡</span>
+                        </div>
+                        <div class="big-stat-val" id="ramVal">0%</div>
+                        <div class="progress-bar"><div id="ramBar" class="progress-fill ram-fill" style="width: 0%"></div></div>
+                        <div class="sub-stat-text">Занято памяти</div>
+                    </div>
+
+                    <!-- KPI Диск -->
+                    <div class="bento-card col-3">
+                        <div class="card-head">
+                            <span class="card-title">Накопитель</span>
+                            <span class="card-icon">💾</span>
+                        </div>
+                        <div class="big-stat-val" id="diskVal">0%</div>
+                        <div class="progress-bar"><div id="diskBar" class="progress-fill disk-fill" style="width: 0%"></div></div>
+                        <div class="sub-stat-text" id="diskSpeedVal">R: 0 MB/s | W: 0 MB/s</div>
+                    </div>
+
+                    <!-- KPI Сеть -->
+                    <div class="bento-card col-3">
+                        <div class="card-head">
+                            <span class="card-title">Сетевой поток</span>
+                            <span class="card-icon">📡</span>
+                        </div>
+                        <div class="big-stat-net" id="netVal">↓ 0 KB/s | ↑ 0 KB/s</div>
+                        <div class="progress-bar"><div class="progress-fill net-fill" style="width: 100%"></div></div>
+                        <div class="sub-stat-text">Активность интерфейса</div>
+                    </div>
+
+                    <!-- График Системы -->
+                    <div class="bento-card col-6">
+                        <div class="card-head"><span class="card-title">📈 Нагрузка CPU и Памяти (%)</span></div>
+                        <div class="chart-container"><canvas id="sysChart"></canvas></div>
+                    </div>
+
+                    <!-- График Сети -->
+                    <div class="bento-card col-6">
+                        <div class="card-head"><span class="card-title">🌊 Сетевой трафик (KB/s)</span></div>
+                        <div class="chart-container"><canvas id="netChart"></canvas></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 2: РЕСУРСЫ И ПРОЦЕССЫ -->
+            <div id="tab-services" class="tab-content">
+                <div class="bento-grid">
+                    
+                    <div class="bento-card col-4">
+                        <div class="card-head"><span class="card-title">⚙️ Системные службы</span></div>
+                        <ul id="servicesList" class="hud-list"><li>Загрузка...</li></ul>
+                    </div>
+
+                    <div class="bento-card col-4">
+                        <div class="card-head"><span class="card-title">🌐 HTTP / Ping Мониторинг</span></div>
+                        <ul id="httpList" class="hud-list"><li>Загрузка...</li></ul>
+                    </div>
+
+                    <div class="bento-card col-4">
+                        <div class="card-head-search">
+                            <span class="card-title">📋 Процессы (<span id="processCount">0</span>)</span>
+                            <input type="text" id="processSearch" class="search-input" placeholder="🔍 Поиск..." autocomplete="off">
+                        </div>
+                        <div class="process-scroll-area">
+                            <table class="hud-table">
+                                <thead>
+                                    <tr><th>PID</th><th>Имя</th><th>CPU</th><th>RAM</th></tr>
+                                </thead>
+                                <tbody id="processTable">
+                                    <tr><td colspan="4">Загрузка...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 3: ТЕРМИНАЛ -->
+            <div id="tab-terminal" class="tab-content">
+                <div class="bento-card col-12 terminal-bento">
+                    <div class="card-head">
+                        <span class="card-title">💻 Удаленная консоль [<span id="terminalHostLabel">my-local-pc</span>]</span>
+                        <button id="clearTermBtn" class="btn-ghost">🧹 Очистить</button>
+                    </div>
+                    <div id="terminalWindow" class="hud-terminal-display">
+                        <div class="term-line sys">1337 HUD Shell v6.0 Initialized. Нажмите ▲ / ▼ для навигации по истории.</div>
+                    </div>
+                    <form id="terminalForm" class="hud-terminal-input">
+                        <span class="prompt-symbol">❯</span>
+                        <input type="text" id="terminalInput" placeholder="Введите команду (dir, ipconfig, tasklist)..." autocomplete="off">
+                        <button type="submit" class="btn-cyan">Выполнить</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 4: АЛЕРТЫ -->
+            <div id="tab-alerts" class="tab-content">
+                <div class="bento-card col-12">
+                    <div class="card-head"><span class="card-title">🔔 Системный журнал алертов</span></div>
+                    <div id="alertLog" class="hud-alerts-feed">
+                        <div class="empty-alert">Событий пока нет</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="hud-footer">
+            <span>1337 Control Center • Обновлено: <strong id="lastUpdate">-</strong></span>
+        </footer>
+
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
