@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1337 HUD - Access Denied</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--bg-glass-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 32px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+            transition: height 0.3s ease;
+        }
+        .auth-header { margin-bottom: 24px; text-align: center; }
+        .auth-form { display: flex; flex-direction: column; gap: 16px; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        
+        .auth-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .auth-input:focus { border-color: var(--cyan); }
+        
+        .auth-btn {
+            background: var(--grad-primary);
+            border: none;
+            color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .auth-btn:hover { box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4); }
+        .auth-btn:active { transform: scale(0.98); }
+        
+        .auth-toggle {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-top: 20px;
+            transition: color 0.2s;
+        }
+        .auth-toggle:hover { color: var(--cyan); }
+        
+        #errorMsg { color: var(--rose); font-size: 12px; text-align: center; min-height: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="nav-brand" style="justify-content: center; font-size: 24px;">
+                    <span class="logo-spark">💠</span>
+                    <span class="logo-title">1337<span class="logo-accent">HUD</span></span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;" id="formTitle">Аутентификация узла</div>
+            </div>
+            
+            <form id="authForm" class="auth-form">
+                <div class="input-group">
+                    <label>Идентификатор (Логин)</label>
+                    <input type="text" name="username" class="auth-input" placeholder="admin" required autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <label>Ключ доступа (Пароль)</label>
+                    <input type="password" name="password" class="auth-input" placeholder="••••••••" required>
+                </div>
+
+                <div id="errorMsg"></div>
+                
+                <button type="submit" id="submitBtn" class="auth-btn">Инициализация</button>
+            </form>
+            
+            <div class="auth-toggle" id="toggleMode">Запросить доступ (Регистрация)</div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('authForm');
+        const toggle = document.getElementById('toggleMode');
+        const btn = document.getElementById('submitBtn');
+        const title = document.getElementById('formTitle');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        let isLogin = true;
+
+        toggle.addEventListener('click', () => {
+            isLogin = !isLogin;
+            errorMsg.innerText = '';
+            if (isLogin) {
+                btn.innerText = 'Инициализация';
+                title.innerText = 'Аутентификация узла';
+                toggle.innerText = 'Запросить доступ (Регистрация)';
+            } else {
+                btn.innerText = 'Создать профиль';
+                title.innerText = 'Регистрация нового оператора';
+                toggle.innerText = 'Вернуться к авторизации';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.innerText = '';
+            
+            // Сбор данных формы в JSON
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            const endpoint = isLogin ? '/api/v1/auth/login' : '/api/v1/auth/register';
+            
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const resData = await res.json();
+                
+                if (res.ok) {
+                    if (isLogin) {
+                        // Сервер установил HTTPOnly куку, можно переходить в панель
+                        window.location.href = '/';
+                    } else {
+                        // Успешная регистрация, показываем сообщение и возвращаем форму логина
+                        errorMsg.style.color = 'var(--emerald)';
+                        errorMsg.innerText = resData.message;
+                        setTimeout(() => toggle.click(), 1500);
+                    }
+                } else {
+                    errorMsg.style.color = 'var(--rose)';
+                    errorMsg.innerText = resData.detail || resData.message || 'Ошибка доступа';
+                }
+            } catch (err) {
+                errorMsg.innerText = 'Сбой соединения с сервером';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+1. 📱 iOS (iPhone / iPad)
+Собирается без наличия физического компьютера Mac с помощью GitHub Actions.
+Шаг 2. Скачивание и инсталляция на iPhone
+Перейти в раздел Actions -> Build iOS App (.ipa) -> Кликнуть по выполненной сборке -> Загрузить файл из блока Artifacts.
+
+Распаковать .zip архив и извлечь ControlCenterApp.ipa.
+
+Подключить iPhone по кабелю к ПК и с помощью Sideloadly или AltStore подписать файл своим бесплатным Apple ID.
+
+На смартфоне зайти в Настройки -> Основные -> VPN и управление устройством -> Нажать «Доверять».
+
+2. 🪟 Windows (ПК / Сервер)
+Для операционной системы Windows создается изолированный файл .exe, которому не требуется установленный интерпретатор Python.
+
+Шаг 1. Компиляция через PyInstaller
+В Командной строке (CMD) или PowerShell:
+
+pip install pyinstaller psutil requests
+pyinstaller --onefile --noconsole agent.py
+--onefile: Упаковывает Python, код и зависимости в единый исполняемый файл.
+
+--noconsole: Скрывает фоновое окно консоли.
+
+Результат: Исполняемый файл сохраняется по пути dist\agent.exe.
+Шаг 2. Настройка автозапуска
+Нажать комбинацию клавиш Win + R.
+
+Ввести shell:startup и нажать Enter.
+
+Скопировать файл agent.exe в открывшуюся папку автозагрузки.
+3. 🐧 Linux (Сервер / Ноутбук)
+Формируется бинарный файл без расширения и регистрируется как системный демон systemd.
+
+Шаг 1. Компиляция бинарника
+В терминале Linux (или через WSL на Windows):
+
+Bash
+pip3 install pyinstaller psutil requests
+pyinstaller --onefile agent.py
+Результат: Файл сохраняется по пути dist/agent.
+
+Шаг 2. Регистрация демона и автозапуск (systemd)
+Bash
+# Права на исполнение и копирование в системную директорию
+chmod +x dist/agent
+sudo cp dist/agent /usr/local/bin/1337-agent
+
+# Создание конфигурационного файла службы
+sudo bash -c 'cat <<EOF > /etc/systemd/system/1337-agent.service
+[Unit]
+Description=1337 Control Agent
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/1337-agent
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+# Активация и запуск службы
+sudo systemctl daemon-reload
+sudo systemctl enable --now 1337-agent
+4. 🍎 macOS (Mac / MacBook)
+Создается бинарный файл под архтиектуру macOS и активируется через службу LaunchAgents.
+
+Шаг 1. Компиляция
+В Терминале macOS:
+
+Bash
+pip3 install pyinstaller psutil requests
+pyinstaller --onefile --noconsole agent.py
+Результат: Файл сохраняется по пути dist/agent.
+
+Шаг 2. Настройка фонового автозапуска (LaunchAgents)
+Bash
+# Копирование в локальную директорию бинарников
+chmod +x dist/agent
+mkdir -p ~/.local/bin
+cp dist/agent ~/.local/bin/1337-agent
+
+# Создание файла конфигурации автозапуска (.plist)
+cat <<EOF > ~/Library/LaunchAgents/com.1337.agent.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.1337.agent</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$HOME/.local/bin/1337-agent</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+EOF
+
+# Регистрация и мгновенный запуск
+launchctl load ~/Library/LaunchAgents/com.1337.agent.plist
+📋 Итоговая проверка работы
+Запустить основной сервер server.py с аргументом --host 0.0.0.0:
+
+Bash
+uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+При запуске скомпилированного приложения на любом из целевых устройств (Windows, Linux, macOS) узел автоматически зарегистрируется на сервере.
+
+В мобильном iOS-приложении в меню «УЗЕЛ» появится новый активный хост с выводом полной аналитики ресурсов в реальном времени.

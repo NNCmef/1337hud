@@ -1,0 +1,15 @@
+.env
+venv/
+__pycache__/
+*.pyc
+backups/
+dist/
+build/
+*.spec
+
+# Local runtime data and logs
+*.db
+*.log
+*.out.log
+*.err.log
+wb_price_bot/.wrangler/
