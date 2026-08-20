@@ -1,0 +1,6 @@
+npm warn exec The following package was not found and will be installed: wrangler@4.122.0
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTimed out waiting for authorization code, please try again.[0m
+
+
+🪵  Logs were written to "C:\Users\Administrator\AppData\Roaming\xdg.config\.wrangler\logs\wrangler-2026-08-12_14-41-52_719.log"
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 94

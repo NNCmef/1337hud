@@ -1,0 +1,5 @@
+2026-08-12 20:47:37,291 INFO root: Cloudflare-туннель работает. Запуск @WBPriceUfa_bot
+2026-08-12 20:47:37,409 INFO aiogram.dispatcher: Start polling
+2026-08-12 20:47:37,513 INFO aiogram.dispatcher: Run polling for bot @WBPriceUfa_bot id=8664771471 - 'WB Price Ufa'
+2026-08-12 20:49:55,515 INFO aiogram.event: Update id=685604285 is handled. Duration 626 ms by bot id=8664771471
+2026-08-12 20:49:58,933 INFO aiogram.event: Update id=685604286 is handled. Duration 149 ms by bot id=8664771471
